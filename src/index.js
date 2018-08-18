@@ -1,4 +1,9 @@
-import milkdropPresetUtils from 'milkdrop-preset-utils';
+import {
+  splitPreset,
+  prepareShader,
+  processOptimizedShader,
+  createBasePresetFuns
+} from 'milkdrop-preset-utils';
 import milkdropParser from 'milkdrop-eel-parser';
 import optimizeGLSL from './glslOptimizer';
 
@@ -31,14 +36,14 @@ function _optimizeShader (text) {
   }
 
   let optimizedShader = optimizeGLSL(text);
-  optimizedShader = milkdropPresetUtils.processOptimizedShader(optimizedShader);
+  optimizedShader = processOptimizedShader(optimizedShader);
 
   return optimizedShader;
 }
 
 async function _convertShader (text) {
   try {
-    const shader = milkdropPresetUtils.prepareShader(text);
+    const shader = prepareShader(text);
     const convertedShader = await _convertHLSL(shader);
     const optimizedShader = _optimizeShader(convertedShader);
     return optimizedShader;
@@ -52,7 +57,7 @@ export async function convertPreset (text) {
   let mainPresetText = text.split('[preset00]')[1];
   mainPresetText = mainPresetText.replace(/\r\n/g, '\n');
 
-  const presetParts = milkdropPresetUtils.splitPreset(mainPresetText);
+  const presetParts = splitPreset(mainPresetText);
   const parsedPreset = milkdropParser.convert_preset_wave_and_shape(
     presetParts.presetVersion,
     presetParts.presetInit,
@@ -61,7 +66,7 @@ export async function convertPreset (text) {
     presetParts.shapes,
     presetParts.waves
   );
-  const presetMap = milkdropPresetUtils.createBasePresetFuns(
+  const presetMap = createBasePresetFuns(
     parsedPreset,
     presetParts.shapes,
     presetParts.waves
