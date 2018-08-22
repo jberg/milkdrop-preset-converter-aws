@@ -38,6 +38,7 @@
     "eslint-plugin-react": "^7.6.1",
     "uglifyjs-webpack-plugin": "^1.1.8",
     "webpack": "^3.10.0",
+    "worker-loader": "^2.0.0",
     "yargs": "^11.0.0"
   }
 }
