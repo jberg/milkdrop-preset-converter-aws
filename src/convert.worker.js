@@ -7,15 +7,12 @@ import {
 import milkdropParser from 'milkdrop-eel-parser';
 import GLSLOptimizer from 'glsl-optimizer-js';
 
-const CONVERT_URL =
-  'https://p2tpeb5v8b.execute-api.us-east-2.amazonaws.com/default/milkdropShaderConverter';
-
-async function _convertHLSL (text) {
+async function _convertHLSL (convertURL, text) {
   if (!text) {
     return '';
   }
 
-  const response = await fetch(CONVERT_URL, {
+  const response = await fetch(convertURL, {
     method: 'POST',
     body: JSON.stringify({
       optimize: false,
@@ -41,10 +38,10 @@ function _optimizeShader (optimizeGLSL, text) {
   return optimizedShader;
 }
 
-async function _convertShader (optimizeGLSL, text) {
+async function _convertShader (optimizeGLSL, convertURL, text) {
   try {
     const shader = prepareShader(text);
-    const convertedShader = await _convertHLSL(shader);
+    const convertedShader = await _convertHLSL(convertURL, shader);
     const optimizedShader = _optimizeShader(optimizeGLSL, convertedShader);
     return optimizedShader;
   } catch (e) {
@@ -70,7 +67,7 @@ function _convertPresetBase (presetParts) {
   return presetMap;
 }
 
-async function convertPreset (text) {
+async function convertPreset (text, convertURL) {
   let mainPresetText = text.split('[preset00]')[1];
   mainPresetText = mainPresetText.replace(/\r\n/g, '\n');
 
@@ -89,8 +86,8 @@ async function convertPreset (text) {
 
   const [presetMap, warpShader, compShader] = await Promise.all([
     _convertPresetBase(presetParts),
-    _convertShader(optimizeGLSL, presetParts.warp),
-    _convertShader(optimizeGLSL, presetParts.comp)
+    _convertShader(optimizeGLSL, convertURL, presetParts.warp),
+    _convertShader(optimizeGLSL, convertURL, presetParts.comp)
   ]);
 
   return Object.assign({}, presetMap, {
@@ -102,5 +99,5 @@ async function convertPreset (text) {
 
 /* eslint-disable no-restricted-globals */
 self.addEventListener('message', async (event) => {
-  self.postMessage(await convertPreset(event.data));
+  self.postMessage(await convertPreset(event.data.text, event.data.convertURL));
 });
