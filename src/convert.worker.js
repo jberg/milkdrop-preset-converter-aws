@@ -93,11 +93,31 @@ async function convertPreset (text, convertURL) {
   return Object.assign({}, presetMap, {
     baseVals: presetParts.baseVals,
     warp: warpShader,
-    comp: compShader
+    comp: compShader,
+    presetParts
   });
+}
+
+async function convertShader (text, convertURL) {
+  const optimizeGLSL = await new Promise((resolve) => {
+    GLSLOptimizer().then((Module) => {
+      const optimize = Module.cwrap('optimize_glsl', 'string', [
+        'string',
+        'number',
+        'number'
+      ]);
+      resolve(optimize);
+    });
+  });
+
+  return _convertShader(optimizeGLSL, convertURL, text);
 }
 
 /* eslint-disable no-restricted-globals */
 self.addEventListener('message', async (event) => {
-  self.postMessage(await convertPreset(event.data.text, event.data.convertURL));
+  if (event.data.method === 'convertPreset') {
+    self.postMessage(await convertPreset(event.data.text, event.data.convertURL));
+  } else if (event.data.method === 'convertShader') {
+    self.postMessage(await convertShader(event.data.text, event.data.convertURL));
+  }
 });
