@@ -1,8 +1,4 @@
-// import {
-//   splitPreset,
-//   createBasePresetFuns
-// } from 'milkdrop-preset-utils';
-// import milkdropParser from 'milkdrop-eel-parser';
+import milkdropParser from 'milkdrop-eel-parser';
 import Worker from './convert.worker';
 
 const CONVERT_URL =
@@ -28,4 +24,30 @@ export async function convertShader (text, convertURL = CONVERT_URL) {
     };
     setTimeout(() => reject(new Error('Shader conversion timed out')), 15000);
   });
+}
+
+export function convertPresetEquations (presetVersion, initEQs, frameEQs, pixelEQs) {
+  const parsedPreset = milkdropParser.convert_basic_preset(presetVersion, initEQs, frameEQs, pixelEQs);
+  return {
+    init_eqs_str: parsedPreset.perFrameInitEQs ? parsedPreset.perFrameInitEQs.trim() : '',
+    frame_eqs_str: parsedPreset.perFrameEQs ? parsedPreset.perFrameEQs.trim() : '',
+    pixel_eqs_str: parsedPreset.perPixelEQs ? parsedPreset.perPixelEQs.trim() : ''
+  };
+}
+
+export function convertWaveEquations (presetVersion, initEQs, frameEQs, pointEQs) {
+  const parsedPreset = milkdropParser.make_wave_map(presetVersion, initEQs, frameEQs, pointEQs);
+  return {
+    init_eqs_str: parsedPreset.perFrameInitEQs ? parsedPreset.perFrameInitEQs.trim() : '',
+    frame_eqs_str: parsedPreset.perFrameEQs ? parsedPreset.perFrameEQs.trim() : '',
+    point_eqs_str: parsedPreset.perPointEQs ? parsedPreset.perPointEQs.trim() : ''
+  };
+}
+
+export function convertShapeEquations (presetVersion, initEQs, frameEQs) {
+  const parsedPreset = milkdropParser.make_shape_map(presetVersion, initEQs, frameEQs);
+  return {
+    init_eqs_str: parsedPreset.perFrameInitEQs ? parsedPreset.perFrameInitEQs.trim() : '',
+    frame_eqs_str: parsedPreset.perFrameEQs ? parsedPreset.perFrameEQs.trim() : ''
+  };
 }
