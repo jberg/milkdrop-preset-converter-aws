@@ -20,7 +20,7 @@ async function _convertHLSL (convertURL, text) {
     })
   });
   if (!response.ok) {
-    throw new Error(response.statusText);
+    throw new Error(await response.text());
   }
 
   const responseBody = await response.json();
@@ -39,14 +39,10 @@ function _optimizeShader (optimizeGLSL, text) {
 }
 
 async function _convertShader (optimizeGLSL, convertURL, text) {
-  try {
-    const shader = prepareShader(text);
-    const convertedShader = await _convertHLSL(convertURL, shader);
-    const optimizedShader = _optimizeShader(optimizeGLSL, convertedShader);
-    return optimizedShader;
-  } catch (e) {
-    return '';
-  }
+  const shader = prepareShader(text);
+  const convertedShader = await _convertHLSL(convertURL, shader);
+  const optimizedShader = _optimizeShader(optimizeGLSL, convertedShader);
+  return optimizedShader;
 }
 
 function _convertPresetBase (presetParts) {
@@ -115,9 +111,13 @@ async function convertShader (text, convertURL) {
 
 /* eslint-disable no-restricted-globals */
 self.addEventListener('message', async (event) => {
-  if (event.data.method === 'convertPreset') {
-    self.postMessage(await convertPreset(event.data.text, event.data.convertURL));
-  } else if (event.data.method === 'convertShader') {
-    self.postMessage(await convertShader(event.data.text, event.data.convertURL));
+  try {
+    if (event.data.method === 'convertPreset') {
+      self.postMessage(await convertPreset(event.data.text, event.data.convertURL));
+    } else if (event.data.method === 'convertShader') {
+      self.postMessage(await convertShader(event.data.text, event.data.convertURL));
+    }
+  } catch (e) {
+    self.postMessage({ error: e.message });
   }
 });

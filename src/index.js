@@ -20,7 +20,11 @@ export async function convertShader (text, convertURL = CONVERT_URL) {
     const worker = new Worker();
     worker.postMessage({ method: 'convertShader', text, convertURL });
     worker.onmessage = (event) => {
-      resolve(event.data);
+      if (Object.prototype.hasOwnProperty.call(event.data, 'error')) {
+        reject(new Error(event.data.error));
+      } else {
+        resolve(event.data);
+      }
     };
     setTimeout(() => reject(new Error('Shader conversion timed out')), 15000);
   });
